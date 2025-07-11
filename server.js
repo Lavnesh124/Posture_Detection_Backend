@@ -51,6 +51,11 @@ app.post("/analyze", (req, res) => {
     });
   });
   
+  // Dummy root route to check if server is running
+app.get("/", (req, res) => {
+  res.json({ status: "Backend server is running!" });
+});
+  
   
 // ✅ Start server
 app.listen(5001, () => {
