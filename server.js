@@ -4,6 +4,22 @@ const { spawn } = require("child_process");
 
 const app = express();
 
+app.get("/test-python", (req, res) => {
+  const { spawn } = require("child_process");
+  const py = spawn("python3", ["-c", "import cv2; import mediapipe; print('ok')"]);
+
+  py.stdout.on("data", (data) => {
+    console.log("✅ Python test:", data.toString());
+    res.send(data.toString());
+  });
+
+  py.stderr.on("data", (err) => {
+    console.error("❌ Python test error:", err.toString());
+    res.status(500).send(err.toString());
+  });
+});
+
+
 // ✅ Allow frontend domains (adjust if needed)
 app.use(cors({
   origin: [
