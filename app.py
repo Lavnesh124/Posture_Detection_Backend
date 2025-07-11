@@ -1,14 +1,14 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import cv2
 import mediapipe as mp
 import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image
-from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Allow all origins
+CORS(app)
 
 def decode_image(base64_string):
     try:
