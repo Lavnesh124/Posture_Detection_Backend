@@ -1,8 +1,6 @@
-flask
-numpy
-opencv-python
 mediapipe
+opencv-python
+numpy
 Pillow
-flask-cors
-gunicorn
+
 

@@ -1,14 +1,12 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+# analyze.py
+import sys
+import json
 import cv2
 import mediapipe as mp
 import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image
-
-app = Flask(__name__)
-CORS(app)
 
 def decode_image(base64_string):
     try:
@@ -26,7 +24,7 @@ def angle(a, b, c):
     return np.degrees(np.arccos(np.clip(cosine, -1.0, 1.0)))
 
 def analyze_pose(image, posture_type):
-    mp_pose = mp.solutions.pose # type: ignore
+    mp_pose = mp.solutions.pose  # type: ignore
     with mp_pose.Pose(static_image_mode=True) as pose:
         results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
@@ -49,9 +47,9 @@ def analyze_pose(image, posture_type):
             return {
                 "posture": "squat",
                 "back_angle": round(back_angle, 2),
-                "is_back_straight": is_back_straight,
-                "knee_ahead_of_toe": knee_over_toe,
-                "is_bad_posture": is_bad
+                "is_back_straight": bool(is_back_straight),
+                "knee_ahead_of_toe": bool(knee_over_toe),
+                "is_bad_posture": bool(is_bad)
             }
 
         elif posture_type == "desk":
@@ -71,36 +69,28 @@ def analyze_pose(image, posture_type):
                 "posture": "desk",
                 "neck_bend_angle": round(neck_angle, 2),
                 "back_angle": round(back_angle, 2),
-                "is_neck_bent": is_neck_bent,
-                "is_back_straight": is_back_straight,
-                "is_bad_posture": is_bad
+                "is_neck_bent": bool(is_neck_bent),
+                "is_back_straight": bool(is_back_straight),
+                "is_bad_posture": bool(is_bad)
             }
 
         return {"status": "Invalid posture type"}
 
-@app.route("/", methods=["GET"])
-def health_check():
-    return jsonify({"status": "Backend server is running!"})
-
-@app.route("/analyze", methods=["POST"])
-def analyze():
+# Main entry
+if __name__ == "__main__":
     try:
-        data = request.get_json(force=True)
+        input_data = sys.stdin.read()
+        data = json.loads(input_data)
+
         base64_img = data.get("image")
         posture_type = data.get("postureType")
 
-        if not base64_img or not posture_type:
-            return jsonify({"error": "Missing image or postureType"}), 400
-
         image, err = decode_image(base64_img)
         if image is None:
-            return jsonify({"error": f"Image decode failed: {err}"}), 400
+            raise ValueError(f"Image decode failed: {err}")
 
         result = analyze_pose(image, posture_type)
-        return jsonify(result)
+        print(json.dumps(result))
 
     except Exception as e:
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+        print(json.dumps({"error": str(e)}))
