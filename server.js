@@ -6,7 +6,9 @@ const app = express();
 
 // ✅ Allow frontend at localhost:3000
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000","https://posture-detection-frontend-f2ey.vercel.app",
+   "https://posture-detection-frontend-ukwr.vercel.app",
+   "https://posture-detection-frontend-v6er.vercel.app"],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
 }));
