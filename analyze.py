@@ -1,11 +1,15 @@
-import sys
-import json
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import cv2
 import mediapipe as mp
 import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image
+import os
+
+app = Flask(__name__)
+CORS(app)
 
 # Decode base64 image into OpenCV format
 def decode_image(base64_string):
@@ -26,7 +30,7 @@ def angle(a, b, c):
 
 # Analyze pose landmarks
 def analyze_pose(image, posture_type):
-    mp_pose = mp.solutions.pose  # type: ignore
+    mp_pose = mp.solutions.pose # type: ignore
     with mp_pose.Pose(static_image_mode=True) as pose:
         results = pose.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
@@ -63,7 +67,7 @@ def analyze_pose(image, posture_type):
             neck_angle = angle(nose, shoulder, hip)
             back_angle = angle(shoulder, hip, knee)
 
-            is_neck_bent = neck_angle < 160  # New logic
+            is_neck_bent = neck_angle < 160
             is_back_straight = back_angle >= 150
             is_bad = is_neck_bent or not is_back_straight
 
@@ -78,22 +82,27 @@ def analyze_pose(image, posture_type):
 
         return {"status": "Invalid posture type"}
 
-# Entry point
-if __name__ == "__main__":
-    try:
-        input_data = sys.stdin.read()
-        data = json.loads(input_data)
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "Backend server is running!"})
 
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    try:
+        data = request.get_json()
         base64_img = data.get("image")
         posture_type = data.get("postureType")
 
         image, err = decode_image(base64_img)
         if image is None:
-            raise ValueError(f"Image decode failed: {err}")
+            return jsonify({"error": f"Image decode failed: {err}"}), 400
 
         result = analyze_pose(image, posture_type)
-        result = json.loads(json.dumps(result))  # ensure native bools
-        print(json.dumps(result))
+        return jsonify(result)
 
     except Exception as e:
-        print(json.dumps({"error": str(e)}))
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)

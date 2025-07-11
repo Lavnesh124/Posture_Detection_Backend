@@ -1,4 +1,8 @@
-mediapipe
+flask
+flask-cors
 opencv-python
+mediapipe
 numpy
-Pillow 
+Pillow
+gunicorn
+
