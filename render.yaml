@@ -1,7 +1,5 @@
 services:
   - type: web
     name: posture-detection-backend
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    runtime: docker
     plan: free
