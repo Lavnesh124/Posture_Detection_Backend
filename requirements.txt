@@ -1,7 +1,8 @@
 opencv-python
-mediapipe
+mediapipe==0.10.9
 numpy
 Pillow
+
 
 
 
